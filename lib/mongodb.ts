@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any, no-var */
+
 import { MongoClient } from 'mongodb';
 
 declare global {
-  // This ensures that global._mongoClientPromise has the correct type
-  // and avoids errors when accessing it in different parts of the code.
   var _mongoClientPromise: Promise<MongoClient> | undefined;
 }
 
@@ -16,7 +16,6 @@ if (!process.env.MONGODB_URI) {
   throw new Error('Please add your MongoDB URI to .env.local');
 }
 
-// Reuse the client in development to avoid creating multiple connections.
 if (process.env.NODE_ENV === 'development') {
   if (!global._mongoClientPromise) {
     client = new MongoClient(uri, options);
@@ -24,7 +23,6 @@ if (process.env.NODE_ENV === 'development') {
   }
   clientPromise = global._mongoClientPromise;
 } else {
-  // In production, always create a new client.
   client = new MongoClient(uri, options);
   clientPromise = client.connect();
 }
