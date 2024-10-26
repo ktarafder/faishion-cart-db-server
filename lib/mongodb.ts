@@ -1,16 +1,11 @@
 import { MongoClient } from 'mongodb';
 
-// Extend the globalThis interface to include _mongoClientPromise
-declare global {
-  namespace NodeJS {
-    interface Global {
-      _mongoClientPromise: Promise<MongoClient> | undefined;
-    }
-  }
-
-  // Make sure globalThis can recognize our extended NodeJS.Global interface
-  var _mongoClientPromise: Promise<MongoClient> | undefined;
+// Extend the global object correctly without namespaces or var
+interface CustomNodeJsGlobal extends NodeJS.Process {
+  _mongoClientPromise?: Promise<MongoClient>;
 }
+
+declare const global: CustomNodeJsGlobal;
 
 const uri = process.env.MONGODB_URI as string;
 const options = {};
@@ -18,11 +13,11 @@ const options = {};
 let client: MongoClient;
 let clientPromise: Promise<MongoClient>;
 
-if (!process.env.MONGODB_URI) {
+if (!uri) {
   throw new Error('Please add your MongoDB URI to .env.local');
 }
 
-// In development, reuse the client instance to avoid excessive connections
+// Use the same client during development to avoid multiple connections
 if (process.env.NODE_ENV === 'development') {
   if (!global._mongoClientPromise) {
     client = new MongoClient(uri, options);
@@ -30,7 +25,7 @@ if (process.env.NODE_ENV === 'development') {
   }
   clientPromise = global._mongoClientPromise;
 } else {
-  // In production, always create a new client
+  // In production, create a new client instance
   client = new MongoClient(uri, options);
   clientPromise = client.connect();
 }
