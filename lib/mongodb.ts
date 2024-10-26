@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, no-var */
-
 import { MongoClient } from 'mongodb';
 
 declare global {
